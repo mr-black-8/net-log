@@ -1,5 +1,5 @@
 param(
-  [Int32]$TestInterval = 1, #minutes
+  [Int32]$TestInterval = 3, #minutes
   [String]$LogPath = "C:\net-log"
 )
 
@@ -37,9 +37,10 @@ if ($HasNetworkConnection) {
 $TaskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-NoProfile -WindowStyle Hidden -command $Command";
 $TaskTrigger = New-ScheduledTaskTrigger -Once -At(Get-Date) -RepetitionInterval (New-TimeSpan -Minutes $TestInterval);
 $TaskPrincipal = New-ScheduledTaskPrincipal -UserID "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest;
+$TaskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun;
 
 if (Get-ScheduledTask -TaskName "Net-Log" -ErrorAction SilentlyContinue) {
   Set-ScheduledTask "Net-Log" -Action $TaskAction -Trigger $TaskTrigger;
 } else {
-  Register-ScheduledTask -Principal $TaskPrincipal -Action $TaskAction -Trigger $TaskTrigger -TaskName "Net-Log" -Description "Checks for & logs internet outages";
+  Register-ScheduledTask -Settings $TaskSettings -Principal $TaskPrincipal -Action $TaskAction -Trigger $TaskTrigger -TaskName "Net-Log" -Description "Checks for & logs internet outages";
 }
